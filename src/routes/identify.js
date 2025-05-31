@@ -48,4 +48,47 @@ router.post('/', async (req, res) => {
           },
         });
       } else {
+                // Find the primary contact (earliest created with linkPrecedence: "primary")
+        primaryContact = existingContacts.reduce((earliest, contact) => {
+          if (contact.linkPrecedence === 'primary' && (!earliest || contact.createdAt < earliest.createdAt)) {
+            return contact;
+          }
+          return earliest || contact;
+        }, null);
+
+        // Handle other contacts: merge primaries or link secondaries
+        const otherContacts = existingContacts.filter(c => c.id !== primaryContact.id);
+        for (const contact of otherContacts) {
+          if (contact.linkPrecedence === 'primary') {
+            // If another primary is found, demote it to secondary and link to the earliest primary
+            await prisma.contact.update({
+              where: { id: contact.id },
+              data: {
+                linkPrecedence: 'secondary',
+                linkedId: primaryContact.id,
+              },
+            });
+            secondaryContacts.push(contact.id);
+          } else {
+            // Already a secondary contact, just add its ID to the list
+            secondaryContacts.push(contact.id);
+          }
+        }
+
+        // Check if the request contains new data (new combination of email/phoneNumber)
+        const hasNewData = !existingContacts.some(c => c.email === email && c.phoneNumber === phoneNumber);
+        if (hasNewData) {
+          // Create a new secondary contact if the combination is new
+          const newContact = await prisma.contact.create({
+            data: {
+              email,
+              phoneNumber,
+              linkPrecedence: 'secondary',
+              linkedId: primaryContact.id,
+            },
+          });
+          secondaryContacts.push(newContact.id);
+        }
+      }
+
       }
