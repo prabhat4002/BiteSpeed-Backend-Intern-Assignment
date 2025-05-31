@@ -1,0 +1,30 @@
+{
+  "name": "bitespeed-identity",
+  "version": "1.0.0",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "prisma:generate": "npx prisma generate",
+    "migrate": "npx prisma migrate deploy --schema=./prisma/schema.prisma || echo 'Prisma migration failed'",
+    "test": "jest",
+    "build": "npm install && npm run prisma:generate && npm run migrate"
+  },
+  "keywords": ["identity-reconciliation", "bitespeed", "api", "backend"],
+  "author": "Prabhat Shankar <shankarprabhat121@gmail.com>",
+  "license": "ISC",
+  "description": "Bitespeed Identity Reconciliation backend service",
+  "dependencies": {
+    "@prisma/client": "^5.15.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "prisma": "^5.15.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}
