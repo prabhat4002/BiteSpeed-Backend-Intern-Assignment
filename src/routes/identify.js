@@ -92,3 +92,55 @@ router.post('/', async (req, res) => {
       }
 
       }
+      // Fetch all related contacts (primary and its secondaries) for the response
+      const relatedContacts = await prisma.contact.findMany({
+        where: {
+          OR: [
+            { id: primaryContact.id },
+            { linkedId: primaryContact.id },
+          ],
+          deletedAt: null,
+        },
+      });
+
+      // Prepare the response: consolidate emails, phone numbers, and secondary IDs
+      const emails = [...new Set(relatedContacts.map(c => c.email).filter(e => e))];
+      const phoneNumbers = [...new Set(relatedContacts.map(c => c.phoneNumber).filter(p => p))];
+      const secondaryContactIds = relatedContacts
+        .filter(c => c.id !== primaryContact.id)
+        .map(c => c.id);
+
+      // Ensure primary contact's email and phone number are first in their arrays
+      if (primaryContact.email) {
+        const index = emails.indexOf(primaryContact.email);
+        if (index !== -1) {
+          emails.splice(index, 1);
+          emails.unshift(primaryContact.email);
+        }
+      }
+      if (primaryContact.phoneNumber) {
+        const index = phoneNumbers.indexOf(primaryContact.phoneNumber);
+        if (index !== -1) {
+          phoneNumbers.splice(index, 1);
+          phoneNumbers.unshift(primaryContact.phoneNumber);
+        }
+      }
+
+      return {
+        contact: {
+          primaryContactId: primaryContact.id,
+          emails,
+          phoneNumbers,
+          secondaryContactIds,
+        },
+      };
+    });
+
+    // Return the response with HTTP 200 status
+    res.status(200).json(result);
+  } catch (error) {
+    // Handle any errors during processing
+    console.error('Error in /identify:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
