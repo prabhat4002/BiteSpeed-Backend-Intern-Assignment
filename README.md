@@ -245,9 +245,9 @@ Built with Node.js, Express, and TypeScript, the service is deployed on Render a
 
 ## 📦 Submission
 
-- **Repository**: [https://github.com/your-username/bitespeed-identity-reconciliation](https://github.com/your-username/bitespeed-identity-reconciliation)
-- **Hosted Endpoint**: [https://your-render-app.onrender.com/identify](https://your-render-app.onrender.com/identify)
-- **Commits**: Descriptive and incremental (e.g., "Add identify endpoint", "Fix hasNewData logic").
+- **Repository**: [https://github.com/prabhat4002/BiteSpeed-Backend-Intern-Assignment](https://github.com/prabhat4002/BiteSpeed-Backend-Intern-Assignment)
+- **Hosted Endpoint**: [https://bitespeed-identity-new.onrender.com/identify ](https://bitespeed-identity-new.onrender.com/identify )
+- **Commits**: Descriptive and incremental (e.g., "node.js setup", "Update Readme").
 - **Notes**:
   - Requests use JSON body (not form-data).
   - Hosted on Render free tier.
