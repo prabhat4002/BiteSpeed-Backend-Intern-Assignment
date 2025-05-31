@@ -21,7 +21,7 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Phone number must be numeric' });
   }
 
-    try {
+  try {
     // Use Prisma transaction to ensure atomicity
     const result = await prisma.$transaction(async (prisma) => {
       // Find existing contacts matching either email or phoneNumber (and not deleted)
@@ -48,7 +48,7 @@ router.post('/', async (req, res) => {
           },
         });
       } else {
-                // Find the primary contact (earliest created with linkPrecedence: "primary")
+        // Find the primary contact (earliest created with linkPrecedence: "primary")
         primaryContact = existingContacts.reduce((earliest, contact) => {
           if (contact.linkPrecedence === 'primary' && (!earliest || contact.createdAt < earliest.createdAt)) {
             return contact;
@@ -91,7 +91,6 @@ router.post('/', async (req, res) => {
         }
       }
 
-      }
       // Fetch all related contacts (primary and its secondaries) for the response
       const relatedContacts = await prisma.contact.findMany({
         where: {
@@ -144,3 +143,5 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+module.exports = router;
