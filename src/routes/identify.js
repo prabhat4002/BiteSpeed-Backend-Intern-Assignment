@@ -34,6 +34,7 @@ router.post('/', async (req, res) => {
           deletedAt: null,
         },
       });
+      console.log('Existing contacts:', existingContacts); // Debug log
 
       let primaryContact = null;
       let secondaryContacts = [];
@@ -55,6 +56,7 @@ router.post('/', async (req, res) => {
           }
           return earliest || contact;
         }, null);
+        console.log('Primary contact:', primaryContact); // Debug log
 
         // Handle other contacts: merge primaries or link secondaries
         const otherContacts = existingContacts.filter(c => c.id !== primaryContact.id);
@@ -75,10 +77,14 @@ router.post('/', async (req, res) => {
           }
         }
 
-        // Check if the request contains new data (new combination of email/phoneNumber)
-        const hasNewData = !existingContacts.some(c => c.email === email && c.phoneNumber === phoneNumber);
+        // Check if the request contains new data (new email or phoneNumber not already in the group)
+        const hasNewData = !existingContacts.some(c =>
+          (email && c.email === email) || (phoneNumber && c.phoneNumber === phoneNumber)
+        );
+        console.log('hasNewData:', hasNewData, 'Input:', { email, phoneNumber }); // Debug log
+
         if (hasNewData) {
-          // Create a new secondary contact if the combination is new
+          // Create a new secondary contact if the combination introduces new information
           const newContact = await prisma.contact.create({
             data: {
               email,
@@ -125,7 +131,7 @@ router.post('/', async (req, res) => {
         }
       }
 
-      return {
+      const response = {
         contact: {
           primaryContactId: primaryContact.id,
           emails,
@@ -133,6 +139,8 @@ router.post('/', async (req, res) => {
           secondaryContactIds,
         },
       };
+      console.log('Response:', response); // Debug log
+      return response;
     });
 
     // Return the response with HTTP 200 status
