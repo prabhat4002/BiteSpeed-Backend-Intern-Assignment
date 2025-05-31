@@ -20,3 +20,32 @@ router.post('/', async (req, res) => {
   if (phoneNumber && !/^\d+$/.test(phoneNumber)) {
     return res.status(400).json({ error: 'Phone number must be numeric' });
   }
+
+    try {
+    // Use Prisma transaction to ensure atomicity
+    const result = await prisma.$transaction(async (prisma) => {
+      // Find existing contacts matching either email or phoneNumber (and not deleted)
+      const existingContacts = await prisma.contact.findMany({
+        where: {
+          OR: [
+            { email: email || null },
+            { phoneNumber: phoneNumber || null },
+          ],
+          deletedAt: null,
+        },
+      });
+
+      let primaryContact = null;
+      let secondaryContacts = [];
+
+      // Case 1: No existing contacts - create a new primary contact
+      if (existingContacts.length === 0) {
+        primaryContact = await prisma.contact.create({
+          data: {
+            email,
+            phoneNumber,
+            linkPrecedence: 'primary',
+          },
+        });
+      } else {
+      }
