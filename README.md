@@ -1,5 +1,67 @@
 # Bitespeed Identity Reconciliation Service 🚀
 Hosted endpoint: https://bitespeed-identity-new.onrender.com/identify
+
+## Test the API Endpoint using Postman
+
+You can test the `POST /identify` endpoint using **Postman**. Follow these steps:
+
+
+### 🧾 Steps to Test
+
+1. Open **Postman** and click on **"New" → "HTTP Request"**  
+2. Set the request type to **POST**
+3. In the **Request URL**, enter: https://bitespeed-identity-new.onrender.com/identify
+4. Click on the **Body** tab  
+5. Select **raw** and set the format to **JSON** 
+6. Enter a JSON request body (see examples below)
+7. Click **Send** – the response will appear below
+
+**Example**:
+
+Note: Since the endpoint is publicly available, responses may vary depending on the current database state due to potential interference from other requests. The following examples are provided for reference to illustrate the expected behavior if the requests are sent in sequence to an initially empty database.
+- **Request**:
+
+    ```json
+    {
+      "email": "lorraine@hillvalley.edu",
+      "phoneNumber": "123456"
+    }
+    ```
+
+- **Response**:
+
+    ```json
+    {
+  "contact": {
+    "primaryContactId": 1,
+    "emails": ["lorraine@hillvalley.edu"],
+    "phoneNumbers": ["123456"],
+    "secondaryContactIds": []
+  }
+}
+
+**Example 2**:
+- **Request**:
+
+    ```json
+    {
+      "email": "mcfly@hillvalley.edu",
+      "phoneNumber": "123456"
+    }
+    ```
+
+- **Response**:
+
+    ```json
+    {
+  "contact": {
+    "primaryContactId": 1,
+    "emails": ["lorraine@hillvalley.edu", "mcfly@hillvalley.edu"],
+    "phoneNumbers": ["123456"],
+    "secondaryContactIds": [2]
+  }
+}
+
 ---
 
 ## 🛠️ Stack
@@ -15,7 +77,7 @@ Hosted endpoint: https://bitespeed-identity-new.onrender.com/identify
 
 This project implements Bitespeed's Identity Reconciliation service, a web API that links customer contacts based on `email` and/or `phoneNumber`. It uses a PostgreSQL database to manage primary and secondary contacts, ensuring data consistency. The `POST /identify` endpoint processes JSON requests, consolidates contact information, and returns a unified customer identity.
 
-Built with Node.js, Express, and TypeScript, the service is deployed on Render and handles various identity reconciliation cases as per the assessment requirements.
+Built with Node.js, Express, and JavaScript, the service is deployed on Render and handles various identity reconciliation cases as per the assessment requirements.
 
 ---
 
@@ -138,7 +200,7 @@ Built with Node.js, Express, and TypeScript, the service is deployed on Render a
 - **Content-Type**: `application/json`
 - **Body**:
 
-    ```json
+    ```plaintext
     {
       "email"?: string,
       "phoneNumber"?: string
@@ -153,7 +215,7 @@ Built with Node.js, Express, and TypeScript, the service is deployed on Render a
 - **Status**: 200 OK
 - **Body**:
 
-    ```json
+    ```plaintext
     {
       "contact": {
         "primaryContactId": number,
@@ -181,7 +243,7 @@ Built with Node.js, Express, and TypeScript, the service is deployed on Render a
 
 - **500 Internal Server Error**:
 
-    ```json
+    ```plaintext
     { "error": "Internal server error", "details": string }
     ```
 
