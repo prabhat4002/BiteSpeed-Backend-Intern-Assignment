@@ -83,9 +83,27 @@ router.post('/', async (req, res) => {
               data: {
                 linkPrecedence: 'secondary',
                 linkedId: primaryContact.id,
+                updatedAt: new Date(),
+              },
+            });
+            const secondariesOfContact = await prisma.contact.findMany({
+              where: {
+                linkedId: contact.id,
+                deletedAt: null,
+              },
+            });
+            await prisma.contact.updateMany({
+              where: {
+                linkedId: contact.id,
+                deletedAt: null,
+              },
+              data: {
+                linkedId: primaryContact.id,
+                updatedAt: new Date(),
               },
             });
             secondaryContacts.push(contact.id);
+            secondariesOfContact.forEach(sec => secondaryContacts.push(sec.id));
           } else {
             secondaryContacts.push(contact.id);
           }
@@ -99,8 +117,8 @@ router.post('/', async (req, res) => {
         if (hasNewData) {
           const newContact = await prisma.contact.create({
             data: {
-              email,
-              phoneNumber,
+              email: email && !existingContacts.some(c => c.email === email) ? email : null,
+              phoneNumber: phoneNumber && !existingContacts.some(c => c.phoneNumber === phoneNumber) ? phoneNumber : null,
               linkPrecedence: 'secondary',
               linkedId: primaryContact.id,
             },
@@ -119,8 +137,19 @@ router.post('/', async (req, res) => {
         },
       });
 
-      const emails = [...new Set(relatedContacts.map(c => c.email).filter(e => e))];
-      const phoneNumbers = [...new Set(relatedContacts.map(c => c.phoneNumber).filter(p => p))];
+      const allEmails = new Set();
+      const allPhoneNumbers = new Set();
+      for (const contact of relatedContacts) {
+        if (contact.email) allEmails.add(contact.email);
+        if (contact.phoneNumber) allPhoneNumbers.add(contact.phoneNumber);
+      }
+      for (const contact of initialMatches) {
+        if (contact.email && !allEmails.has(contact.email)) allEmails.add(contact.email);
+        if (contact.phoneNumber && !allPhoneNumbers.has(contact.phoneNumber)) allPhoneNumbers.add(contact.phoneNumber);
+      }
+
+      const emails = Array.from(allEmails);
+      const phoneNumbers = Array.from(allPhoneNumbers);
       const secondaryContactIds = relatedContacts
         .filter(c => c.id !== primaryContact.id)
         .map(c => c.id);
