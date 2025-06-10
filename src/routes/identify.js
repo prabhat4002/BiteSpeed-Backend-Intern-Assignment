@@ -124,6 +124,12 @@ router.post('/', async (req, res) => {
           secondaryContactIds.add(contact.id);
 
           // Reassign any secondaries of this contact
+          const secondaries = await prisma.contact.findMany({
+            where: {
+              linkedId: contact.id,
+              deletedAt: null,
+            },
+          });
           await prisma.contact.updateMany({
             where: {
               linkedId: contact.id,
@@ -132,13 +138,6 @@ router.post('/', async (req, res) => {
             data: {
               linkedId: primaryContactId,
               updatedAt: new Date(),
-            },
-          });
-
-          const secondaries = await prisma.contact.findMany({
-            where: {
-              linkedId: contact.id,
-              deletedAt: null,
             },
           });
           secondaries.forEach(sec => secondaryContactIds.add(sec.id));
@@ -156,12 +155,32 @@ router.post('/', async (req, res) => {
         }
       }
 
+      // Refresh the list of related contacts after updates
+      const updatedRelatedContacts = await prisma.contact.findMany({
+        where: {
+          OR: [
+            { id: primaryContactId },
+            { linkedId: primaryContactId },
+          ],
+          deletedAt: null,
+        },
+      });
+
+      // Include all initial matches to ensure no emails are missed
+      const allContacts = [...updatedRelatedContacts];
+      for (const match of initialMatches) {
+        if (!allContacts.some(c => c.id === match.id)) {
+          allContacts.push(match);
+        }
+      }
+
       // Check if the input introduces new data
-      const allEmails = uniqueRelatedContacts.map(c => c.email).filter(e => e);
-      const allPhoneNumbers = uniqueRelatedContacts.map(c => c.phoneNumber).filter(p => p);
+      const allEmails = allContacts.map(c => c.email).filter(e => e);
+      const allPhoneNumbers = allContacts.map(c => c.phoneNumber).filter(p => p);
       const hasNewData =
         (email && !allEmails.includes(email)) ||
         (phoneNumber && !allPhoneNumbers.includes(phoneNumber));
+      console.log('hasNewData:', hasNewData, 'Input:', { email, phoneNumber });
 
       if (hasNewData) {
         const newContact = await prisma.contact.create({
@@ -173,9 +192,10 @@ router.post('/', async (req, res) => {
           },
         });
         secondaryContactIds.add(newContact.id);
+        allContacts.push(newContact);
       }
 
-      // Fetch all contacts linked to the oldest primary for the response
+      // Fetch the final list of contacts for the response
       const finalRelatedContacts = await prisma.contact.findMany({
         where: {
           OR: [
